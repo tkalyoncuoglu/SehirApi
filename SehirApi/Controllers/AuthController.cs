@@ -19,19 +19,19 @@ namespace SehirRehberi.API.Controllers
     [Route("api/Auth")]
     public class AuthController : Controller
     {
-        private IAuthRepository _authRepository;
+        private IUserRepository _userRepository;
         private IConfiguration _configuration;
 
-        public AuthController(IAuthRepository authRepository, IConfiguration configuration)
+        public AuthController(IUserRepository authRepository, IConfiguration configuration)
         {
-            _authRepository = authRepository;
+            _userRepository = authRepository;
             _configuration = configuration;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody]UserForRegisterDto userForRegisterDto)
         {
-            if (await _authRepository.UserExists(userForRegisterDto.UserName))
+            if (await _userRepository.UserExists(userForRegisterDto.UserName))
             {
                 ModelState.AddModelError("UserName","Username already exists");
             }
@@ -46,14 +46,14 @@ namespace SehirRehberi.API.Controllers
                 UserName = userForRegisterDto.UserName
             };
 
-            var createdUser = await _authRepository.Register(userToCreate, userForRegisterDto.Password);
+            var createdUser = await _userRepository.Register(userToCreate, userForRegisterDto.Password);
             return StatusCode(201);
         }
 
         [HttpPost("login")]
         public async Task<ActionResult> Login([FromBody] UserForLoginDto userForLoginDto)
         {
-            var user = await _authRepository.Login(userForLoginDto.UserName, userForLoginDto.Password);
+            var user = await _userRepository.Login(userForLoginDto.UserName, userForLoginDto.Password);
 
             if (user==null)
             {

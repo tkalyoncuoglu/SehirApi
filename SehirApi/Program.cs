@@ -40,7 +40,7 @@ namespace SehirApi
             builder.Services.AddScoped<DataContext>();
             builder.Services.AddScoped<IPhotosRepository, PhotosRepository>();
             builder.Services.AddScoped<ICitiesRepository, CitiesRepository>();
-            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
 
             //jwt 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>{
