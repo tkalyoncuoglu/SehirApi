@@ -28,15 +28,6 @@ namespace SehirApi
             //automapper
             builder.Services.AddAutoMapper(typeof(Program));
 
-            /*
-            sehrin fotosunun fotonun sehri derlen reference looping hatasý için 
-            builder.Services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-            });
-            */
-
-            
             builder.Services.AddScoped<DataContext>();
             builder.Services.AddScoped<IPhotosRepository, PhotosRepository>();
             builder.Services.AddScoped<ICitiesRepository, CitiesRepository>();
