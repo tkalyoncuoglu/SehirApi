@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using SehirRehberi.API.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using SehirApi.Data;
+using SehirApi.Models;
 
-namespace SehirRehberi.API.Data
+namespace SehirApi.Repository
 {
-    public class AuthRepository:IAuthRepository
+    public class UserRepository : BaseRepository<User>, IUserRepository
     {
-        private DataContext _context;
-
-        public AuthRepository(DataContext context)
-        {
-            _context = context;
-        }
-
+        public UserRepository(DataContext context) : base(context) { }
         public async Task<User> Register(User user, string password)
         {
             byte[] passwordHash, passwordSalt;
@@ -24,17 +15,15 @@ namespace SehirRehberi.API.Data
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            await _dataContext.Users.AddAsync(user);
+            await _dataContext.SaveChangesAsync();
 
             return user;
-
-
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
-            using (var hmac=new System.Security.Cryptography.HMACSHA512())
+            using (var hmac = new System.Security.Cryptography.HMACSHA512())
             {
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
@@ -43,13 +32,13 @@ namespace SehirRehberi.API.Data
 
         public async Task<User> Login(string userName, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
-            if (user==null)
+            var user = await _dataContext.Users.FirstOrDefaultAsync(x => x.UserName == userName);
+            if (user == null)
             {
                 return null;
             }
 
-            if (!VerifyPasswordHash(password,user.PasswordHash,user.PasswordSalt))
+            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             {
                 return null;
             }
@@ -64,7 +53,7 @@ namespace SehirRehberi.API.Data
                 var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
                 for (int i = 0; i < computedHash.Length; i++)
                 {
-                    if (computedHash[i]!=userPasswordHash[i])
+                    if (computedHash[i] != userPasswordHash[i])
                     {
                         return false;
                     }
@@ -76,7 +65,7 @@ namespace SehirRehberi.API.Data
 
         public async Task<bool> UserExists(string userName)
         {
-            if (await _context.Users.AnyAsync(x=>x.UserName == userName))
+            if (await _dataContext.Users.AnyAsync(x => x.UserName == userName))
             {
                 return true;
             }

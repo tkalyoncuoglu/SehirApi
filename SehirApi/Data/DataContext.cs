@@ -1,20 +1,27 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using SehirRehberi.API.Models;
+using SehirApi.Models;
 
-namespace SehirRehberi.API.Data
+namespace SehirApi.Data
 {
     public class DataContext:DbContext
     {
-        public DataContext(DbContextOptions<DataContext> options):base(options)
+       
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            
+            optionsBuilder.UseSqlite("Data Source=mydatabase.db");
         }
 
-        public DbSet<Value> Values { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+
+            modelBuilder.Entity<City>()
+                .HasMany(c => c.Photos)
+                .WithOne(c => c.City)
+                .HasForeignKey(c => c.CityId);
+        }
+
+
+       
         public DbSet<City> Cities { get; set; }
         public DbSet<Photo> Photos { get; set; }
         public DbSet<User> Users { get; set; }

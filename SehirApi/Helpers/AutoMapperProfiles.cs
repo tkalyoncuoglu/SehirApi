@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using SehirRehberi.API.Dtos;
-using SehirRehberi.API.Models;
+using SehirApi.Dtos.Request;
+using SehirApi.Models;
+using SehirApi.Dtos.Response;
 
 namespace SehirRehberi.API.Helpers
 {
@@ -12,15 +13,11 @@ namespace SehirRehberi.API.Helpers
     {
         public AutoMapperProfiles()
         {
-            CreateMap<City, CityForListDto>()
-                .ForMember(destination=> destination.PhotoUrl, opt =>
-                {
-                    //ismi otomatik eşleşmeyen için
-                    opt.MapFrom(source=> source.Photos.FirstOrDefault(p=>p.IsMain).Url);
-                });
-            CreateMap<City, CityForDetailDto>().ReverseMap();
-            CreateMap<Photo, PhotoForCreationDto>().ReverseMap();
-            CreateMap<Photo, PhotoForReturnDto>().ReverseMap();
+            CreateMap<Photo, SehirApi.Dtos.Response.PhotoDto>();
+            CreateMap<City, CityDetailDto>().ReverseMap();
+            CreateMap<SehirApi.Dtos.Request.PhotoDto, Photo>().
+                ForMember(destination => destination.File, opt => opt.Ignore()); ;
+            CreateMap<CityDto, City>().ReverseMap();
         }
     }
 }

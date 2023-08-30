@@ -1,13 +1,8 @@
-using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SehirApi.Data;
-using SehirRehberi.API.Data;
-using SehirRehberi.API.Helpers;
-using System.Configuration;
+using SehirApi.Repository;
 using System.Text;
 
 namespace SehirApi
@@ -24,13 +19,7 @@ namespace SehirApi
                 .SetBasePath(builder.Environment.ContentRootPath)
                 .AddJsonFile("appsettings.json")
                 .Build();
-            builder.Services.AddDbContext<DataContext>(options =>
-            {
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-            });
-
-            //cloudinary
-            builder.Services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+            
 
             //key okunmasý için
             var key = Encoding.ASCII.GetBytes(configuration.GetSection("Appsettings:Token").Value);
@@ -39,15 +28,18 @@ namespace SehirApi
             //automapper
             builder.Services.AddAutoMapper(typeof(Program));
 
-            //sehrin fotosunun fotonun sehri derlen reference looping hatasý için 
+            /*
+            sehrin fotosunun fotonun sehri derlen reference looping hatasý için 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
+            */
 
-
-            //Containerda IAppRepo kullanýrsak Apprepo da çalýþtýrmaasý için
-            builder.Services.AddScoped<IAppRepository, AppRepository>();
+            
+            builder.Services.AddScoped<DataContext>();
+            builder.Services.AddScoped<IPhotosRepository, PhotosRepository>();
+            builder.Services.AddScoped<ICitiesRepository, CitiesRepository>();
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
             //jwt 
@@ -67,22 +59,49 @@ namespace SehirApi
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Þehir API", Version = "v1" });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    BearerFormat = "JWT",
+                    Description = "JWT Authorization header using the Bearer scheme.",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                      new OpenApiSecurityScheme
+                      {
+                          Reference = new OpenApiReference
+                          {
+                              Type = ReferenceType.SecurityScheme,
+                              Id = "Bearer"
+                          }
+                      },
+                      Array.Empty<string>()
+                    }
+                });
+            });
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            
 
             app.UseHttpsRedirection();
-
+            
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseAuthentication();
+            
 
             app.MapControllers();
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SehirRehberi.API.Dtos
+namespace SehirApi.Dtos
 {
     public class UserForRegisterDto
     {

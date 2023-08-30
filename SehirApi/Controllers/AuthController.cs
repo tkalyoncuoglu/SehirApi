@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using SehirRehberi.API.Data;
-using SehirRehberi.API.Dtos;
-using SehirRehberi.API.Models;
+using SehirApi.Dtos;
+using SehirApi.Models;
+using SehirApi.Repository;
 
 namespace SehirRehberi.API.Controllers
 {

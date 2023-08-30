@@ -21,11 +21,15 @@ namespace SehirApi.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            return Enumerable.Range(1, 5).Select(index => {
+                var temperatureC = Random.Shared.Next(-20, 55);
+                var summary = Summaries[(int)(Math.Floor(((double)temperatureC + 20) / 75 * 10))];
+                return new WeatherForecast
+                {
+                    Date = DateTime.Now.AddDays(index),
+                    TemperatureC = temperatureC,
+                    Summary = summary
+                };
             })
             .ToArray();
         }

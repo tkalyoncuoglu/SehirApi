@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SehirRehberi.API.Models;
+using SehirApi.Models;
 
-namespace SehirRehberi.API.Data
+namespace SehirApi.Repository
 {
     public interface IAuthRepository
     {

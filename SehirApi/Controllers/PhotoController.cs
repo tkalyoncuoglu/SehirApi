@@ -1,14 +1,8 @@
 ﻿using AutoMapper;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using SehirApi.Data;
-using SehirRehberi.API.Dtos;
-using SehirRehberi.API.Helpers;
-using SehirRehberi.API.Models;
-using System.Security.Claims;
+using SehirApi.Models;
+using SehirApi.Dtos.Response;
+using SehirApi.Repository;
 
 namespace SehirApi.Controllers
 {
@@ -16,68 +10,47 @@ namespace SehirApi.Controllers
     [ApiController]
     public class PhotoController : ControllerBase
     {
-        private readonly IAppRepository _appRepository;
+        private readonly IPhotosRepository _photosRepository;
+        private readonly ICitiesRepository _citiesRepository;
         private readonly IMapper _mapper;
-        private readonly IOptions<CloudinarySettings> _cloudinaryConfig;
-        private readonly Cloudinary _cloudinary;
 
-        public PhotoController(IAppRepository appRepository, IMapper mapper, IOptions<CloudinarySettings> cloudinaryConfig)
+        public PhotoController(IPhotosRepository photosRepository, ICitiesRepository citiesRepository, IMapper mapper)
         {
-            _appRepository = appRepository;
+            _photosRepository = photosRepository;
+            _citiesRepository = citiesRepository;
             _mapper = mapper;
-            _cloudinaryConfig = cloudinaryConfig;
-            Account account = new Account(_cloudinaryConfig.Value.CloudName, _cloudinaryConfig.Value.ApiKey, _cloudinaryConfig.Value.ApiSecret);
-            _cloudinary = new Cloudinary(account);
         }
         [HttpPost]
-        public IActionResult AddPhotoForCity(int cityId, [FromBody]PhotoForCreationDto photoForCreationDto)
+        public IActionResult AddPhotoForCity(int cityId, [FromForm] Dtos.Request.PhotoDto photoForCreationDto)
         {
-            var city=_appRepository.GetCityById(cityId);
+            var city=_citiesRepository.GetById(cityId);
             if(city == null)
             {
                 return BadRequest("Could not find the city");
             }
-            var currentId=int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if(currentId != city.UserId)
-            {
-                return Unauthorized();
-            }
+            
             var file=photoForCreationDto.File;
-            var uploadResult = new ImageUploadResult();
+            MemoryStream stream = new MemoryStream();
             if(file.Length > 0)
             {
-                using(var stream=file.OpenReadStream())
-                {
-                    var uploadParams = new ImageUploadParams()
-                    {
-                        File = new FileDescription(file.Name, stream)
-                    };
-                    uploadResult=_cloudinary.Upload(uploadParams);
-                }
+                file.CopyTo(stream);
             }
-            photoForCreationDto.Url=uploadResult.Url.ToString();
-            photoForCreationDto.PublicId=uploadResult.PublicId;
-
+            
             var photo = _mapper.Map<Photo>(photoForCreationDto);
-            photo.City=city;
+            photo.File = stream.ToArray();
 
-            if(!city.Photos.Any(x=>x.IsMain))
-            {
-                photo.IsMain=true;
-            }
             city.Photos.Add(photo);
-            if (_appRepository.SaveAll())
+            if (_photosRepository.SaveAll())
             {
-                var photoToReturn=_mapper.Map<PhotoForReturnDto>(photo);
-                return CreatedAtRoute("GetPhoto",new {id=photo.Id},photoToReturn);
+                return Ok();
             }
             return BadRequest("Could Not Add Photo");
         }
         [HttpGet("{id}",Name ="GetPhoto")]
         public IActionResult GetPhoto(int id)
         {
-            var photofromDb=_appRepository.GetPhoto(id);
-            var photo=_mapper.Map<PhotoForReturnDto>(photofromDb);
+            var photofromDb=_photosRepository.GetById(id);
+            var photo= _mapper.Map<Dtos.Response.PhotoDto>(photofromDb);
             return Ok(photo);
         }
     }
